@@ -101,7 +101,7 @@ const capture = async () => {
     console.log("getting inside");
     // console.log(image);
     const detections = await faceapi
-      .detectAllFaces(image)
+      .detectAllFaces(can)
       .withFaceLandmarks()
       .withFaceDescriptors();
 
