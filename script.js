@@ -32,25 +32,25 @@ async function startWebcam() {
 }
 
 async function getLabeledFaceDescriptions() {
-  const labels = ["Felipe", "Messi", "Data"];
+  const labels = ["Mughees", "zia"];
   try {
     return Promise.all(
       labels.map(async (label) => {
         const descriptions = [];
-for (let i = 1; i <= 2; i++) {
-  const img = await faceapi.fetchImage(`./labels/${label}/${i}.jpg`);
-  const detections = await faceapi
-    .detectSingleFace(img)
-    .withFaceLandmarks()
-    .withFaceDescriptor();
-  if (detections) {
-    descriptions.push(detections.descriptor);
-    console.log("hello")
-  } else {
-    console.error(`Face detection failed for ${label}/${i}.jpg`);
-    // Handle the error or skip this image
-  }
-}
+        for (let i = 0; i < 2; i++) {
+          const img = await faceapi.fetchImage(`./labels/${label}/${i}.jpg`);
+          const detections = await faceapi
+            .detectSingleFace(img)
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+          if (detections) {
+            descriptions.push(detections.descriptor);
+            console.log("hello");
+          } else {
+            console.error(`Face detection failed for ${label}/${i}.jpg`);
+            // Handle the error or skip this image
+          }
+        }
 
         return new faceapi.LabeledFaceDescriptors(label, descriptions);
       })
@@ -61,35 +61,56 @@ for (let i = 1; i <= 2; i++) {
   }
 }
 
-video.addEventListener("play", async () => {
+const capture = async () => {
+  const bitmap = await createImageBitmap(video);
+
+  bitmap.width = 600;
+  bitmap.height = 450;
+  console.log(bitmap);
+  const can = document.createElement("canvas");
+  const context = can.getContext("2d");
+  can.width = 600;
+  can.height = 450;
+  context.drawImage(bitmap, 0, 0);
+
+  context.drawImage(bitmap, 0, 0, can.width, can.height);
+
+  // Append the canvas to the body
+  document.body.appendChild(can);
+  const base64Image = can.toDataURL();
+  const userimage = base64Image;
+  console.log(userimage);
+  //
   const labeledFaceDescriptors = await getLabeledFaceDescriptions();
   const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors);
-
+  console.log(labeledFaceDescriptors);
   const canvas = faceapi.createCanvasFromMedia(video);
   document.body.append(canvas);
 
-  const displaySize = { width: video.videoWidth, height: video.videoHeight }; // Use videoWidth and videoHeight instead of width and height
+  const displaySize = { width: video.videoWidth, height: video.videoHeight };
   faceapi.matchDimensions(canvas, displaySize);
+  //
+  // Create a new Image element
+  const image = new Image();
 
-  setInterval(async () => {
+  // Set the source of the image element to the base64 string
+  image.src = userimage;
+
+  // Wait for the image to load
+  image.onload = async () => {
+    console.log("getting inside");
+    // console.log(image);
     const detections = await faceapi
-      .detectAllFaces(video)
+      .detectAllFaces(image)
       .withFaceLandmarks()
       .withFaceDescriptors();
 
+    console.log(detections);
     const resizedDetections = faceapi.resizeResults(detections, displaySize);
-
-    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-
     const results = resizedDetections.map((d) => {
       return faceMatcher.findBestMatch(d.descriptor);
     });
-    results.forEach((result, i) => {
-      const box = resizedDetections[i].detection.box;
-      const drawBox = new faceapi.draw.DrawBox(box, {
-        label: result.toString(), // Convert the result to a string
-      });
-      drawBox.draw(canvas);
-    });
-  }, 100);
-});
+    console.log(results);
+  };
+  //
+};
