@@ -71,7 +71,7 @@ const capture = async () => {
   can.width = 600;
   can.height = 450;
   //draw
-  context.drawImage(bitmap, 0, 0); //if you dont want to show
+  // context.drawImage(bitmap, 0, 0); //if you dont want to show
   context.drawImage(bitmap, 0, 0, can.width, can.height); //if you want to show
   //adding to the body
   document.body.appendChild(can);
